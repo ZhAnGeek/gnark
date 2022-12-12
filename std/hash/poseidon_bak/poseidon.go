@@ -1,6 +1,8 @@
 package poseidon_bak
 
 import (
+	"github.com/consensys/gnark/backend/hint"
+	"github.com/consensys/gnark/frontend/compiled"
 	"github.com/consensys/gnark/std/hash/poseidon_bak/constants"
 
 	"github.com/consensys/gnark/frontend"
@@ -73,7 +75,32 @@ func permutation(api frontend.API, state []frontend.Variable) []frontend.Variabl
 	return state
 }
 
+func preHandleData(api frontend.API, data ...frontend.Variable) []frontend.Variable {
+	// if all constants, skipped
+	constantCount := 0
+	for i := range data {
+		if _, isConstant := api.Compiler().ConstantValue(data[i]); isConstant {
+			constantCount++
+		}
+	}
+	if constantCount == len(data) {
+		return data
+	}
+
+	// get the self variables by hint, and make sure it is equal to data[i]
+	for i := range data {
+		self, err := api.Compiler().NewHint(hint.Self, 1, data[i])
+		if err != nil {
+			panic(err)
+		}
+		api.AssertIsEqual(self[0], data[i])
+		data[i] = self[0]
+	}
+	return data
+}
+
 func Poseidon(api frontend.API, input ...frontend.Variable) frontend.Variable {
+	input = preHandleData(api, input...)
 	inputLength := len(input)
 	// No support for hashing inputs of length less than 2
 	if inputLength < 2 {
@@ -92,6 +119,8 @@ func Poseidon(api frontend.API, input ...frontend.Variable) frontend.Variable {
 		for i := 0; i < count; i++ {
 			lastIndex = (i + 1) * maxLength
 			copy(state[1:], input[startIndex:lastIndex])
+			v := api.AddInternalVariableWithLazy(compiled.GetConstraintsNum(state[1:], api))
+			api.AddLazyPoseidon(v, state[1:]...)
 			state = permutation(api, state)
 			startIndex = lastIndex
 		}
@@ -102,6 +131,8 @@ func Poseidon(api frontend.API, input ...frontend.Variable) frontend.Variable {
 		lastIndex = inputLength
 		remainigLength := lastIndex - startIndex
 		copy(state[1:], input[startIndex:lastIndex])
+		v := api.AddInternalVariableWithLazy(compiled.GetConstraintsNum(state[1:remainigLength+1], api))
+		api.AddLazyPoseidon(v, state[1:remainigLength+1]...)
 		state = permutation(api, state[:remainigLength+1])
 	}
 	return state[0]
