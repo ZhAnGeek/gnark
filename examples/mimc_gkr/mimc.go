@@ -29,6 +29,8 @@ type Circuit struct {
 	// default uses variable name and secret visibility.
 	PreImage frontend.Variable
 	Hash     frontend.Variable `gnark:",public"`
+	Any0     frontend.Variable `gnark:",public"`
+	Any1     frontend.Variable `gnark:",public"`
 	GKRs     gkr.GkrCircuit
 }
 
@@ -40,6 +42,7 @@ func (circuit *Circuit) Define(api frontend.API) error {
 		//circuit.Hash2BySamePreImage(api)
 		circuit.Hash2BySamePreImageHint(api)
 	}
+	api.AssertIsDifferent(circuit.Any0, circuit.Any1)
 	return circuit.GKRs.AssertValid(api, circuit.PreImage, circuit.Hash)
 }
 

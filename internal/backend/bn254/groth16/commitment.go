@@ -17,6 +17,9 @@
 package groth16
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	curve "github.com/consensys/gnark-crypto/ecc/bn254"
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	"github.com/consensys/gnark/constraint"
@@ -24,6 +27,9 @@ import (
 )
 
 func solveCommitmentWire(commitmentInfo *constraint.Commitment, commitment *curve.G1Affine, publicCommitted []*big.Int) (fr.Element, error) {
-	res, err := fr.Hash(commitmentInfo.SerializeCommitment(commitment.Marshal(), publicCommitted, (fr.Bits-1)/8+1), []byte(constraint.CommitmentDst), 1)
-	return res[0], err
+	fmt.Println(hex.EncodeToString(commitmentInfo.SerializeCommitment(commitment.Marshal(), publicCommitted, (fr.Bits-1)/8+1)))
+	bytes := sha256.Sum256(commitmentInfo.SerializeCommitment(commitment.Marshal(), publicCommitted, (fr.Bits-1)/8+1))
+	bi := new(big.Int).SetBytes(bytes[:])
+	fmt.Println("hash", hex.EncodeToString(bi.Bytes()))
+	return *new(fr.Element).SetBigInt(bi), nil
 }

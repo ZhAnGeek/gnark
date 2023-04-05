@@ -1,11 +1,4 @@
-package groth16
 
-// solidityTemplate based on an audited template https://github.com/appliedzkp/semaphore/blob/master/contracts/sol/verifier.sol
-// audit report https://github.com/appliedzkp/semaphore/blob/master/audit/Audit%20Report%20Summary%20for%20Semaphore%20and%20MicroMix.pdf
-// But some gas cost optimizations have been made.
-// this is an experimental feature and gnark solidity generator as not been thoroughly tested
-const solidityTemplate = `
-{{- $lenK := len .G1.K }}
 // SPDX-License-Identifier: AML
 //
 // Copyright 2017 Christian Reitwiessner
@@ -209,47 +202,41 @@ contract Verifier {
     }
 
     function verifyingKey() internal pure returns (VerifyingKey memory vk) {
-        vk.alfa1 = Pairing.G1Point(uint256({{.G1.Alpha.X.String}}), uint256({{.G1.Alpha.Y.String}}));
-        vk.beta2 = Pairing.G2Point([uint256({{.G2.Beta.X.A1.String}}), uint256({{.G2.Beta.X.A0.String}})], [uint256({{.G2.Beta.Y.A1.String}}), uint256({{.G2.Beta.Y.A0.String}})]);
-        vk.gamma2 = Pairing.G2Point([uint256({{.G2.Gamma.X.A1.String}}), uint256({{.G2.Gamma.X.A0.String}})], [uint256({{.G2.Gamma.Y.A1.String}}), uint256({{.G2.Gamma.Y.A0.String}})]);
-        vk.delta2 = Pairing.G2Point([uint256({{.G2.Delta.X.A1.String}}), uint256({{.G2.Delta.X.A0.String}})], [uint256({{.G2.Delta.Y.A1.String}}), uint256({{.G2.Delta.Y.A0.String}})]);
-		vk.g2 = Pairing.G2Point([uint256({{.CommitmentKey.G.X.A1.String}}), uint256({{.CommitmentKey.G.X.A0.String}}), uint256({{.CommitmentKey.G.Y.A1.String}}), uint256({{.CommitmentKey.G.Y.A0.String}})]);
-		vk.gRootSigmaNeg2 = Pairing.G2Point([uint256({{.CommitmentKey.GRootSigmaNeg.X.A1.String}}), uint256({{.CommitmentKey.GRootSigmaNeg.X.A0.String}}), uint256({{.CommitmentKey.GRootSigmaNeg.Y.A1.String}}), uint256({{.CommitmentKey.GRootSigmaNeg.Y.A0.String}})]);
+        vk.alfa1 = Pairing.G1Point(uint256(19845275157305329817270712870519327215928423877226694661654428772600392127152), uint256(5922205489357142657390257703736199065513502779240849693441482100386398267819));
+        vk.beta2 = Pairing.G2Point([uint256(1645848163885121275220139782053746932358907108335041462279771492889258039331), uint256(6655739033283305608289797207305117981238198119342833785876005459365504160204)], [uint256(9276425540726747244089840267709488572797545832022628786459156828316307139110), uint256(15003585545947341870333319385358644806988202419252599345781997183717698525242)]);
+        vk.gamma2 = Pairing.G2Point([uint256(13247951322102494626900509434764500167395205191629382888796428668361334021498), uint256(4026958170738042276473170623611565136963263409240730945263149557395114552702)], [uint256(6512429680125388706271036610609682545361127101289075027835543443745930617012), uint256(5674757341978077172259191117474559762537064248795618381253762677618980013599)]);
+        vk.delta2 = Pairing.G2Point([uint256(8684269618223764824471771605556307616072271922372547557364789871752166671729), uint256(1469314478632896630621510280152153112645074597070383750000134930577145409276)], [uint256(17901501574817329782989482824606660963215201428244130213207816543773230951501), uint256(14748323676376642351570777124193896608562858281323044336913850926188595395642)]);
+		vk.g2 = Pairing.G2Point([uint256(15441851398081905723229859929074729503086595290721268231181172220162000804071), uint256(9760778954455154901431403698364139801760641153935749707489925091887679730056), uint256(1461830313526063875130343207402771263144508948525039197015117912274617688425), uint256(9187560299696423682366016256662795080820537382916262442152078670009486255909)]);
+		vk.gRootSigmaNeg2 = Pairing.G2Point([uint256(2011218808780311195760069163620178658189889778386923877620985226990410816748), uint256(15435969678631777703822761975116324919528649384580180428913618169166190099310), uint256(11389472479695792187508254453204572754657983897689351287753772727653041448230), uint256(3693165019018644723941696519775578442333913601280109321750917848156896443485)]);
     }
 
     function verifyingKey2() internal pure returns (VerifyingKey memory vk) {
-		vk[0] = {{.G1.Alpha.X.String}};
-		vk[1] = {{.G1.Alpha.Y.String}};
-		vk[2] = {{.G2.Beta.X.A1.String}};
-		vk[3] = {{.G2.Beta.X.A0.String}};
-		vk[4] = {{.G2.Beta.Y.A1.String}};
-		vk[5] = {{.G2.Beta.Y.A0.String}};
-		vk[6] = {{.G2.Gamma.X.A1.String}};
-		vk[7] = {{.G2.Gamma.X.A0.String}};
-		vk[8] = {{.G2.Gamma.Y.A1.String}};
-		vk[9] = {{.G2.Gamma.Y.A0.String}};
-		vk[10] = {{.G2.Delta.X.A1.String}};
-		vk[11] = {{.G2.Delta.X.A0.String}};
-		vk[12] = {{.G2.Delta.Y.A1.String}};
-		vk[13] = {{.G2.Delta.Y.A0.String}};
-		vk[14] = {{.CommitmentKey.G.X.A1.String}};
-		vk[15] = {{.CommitmentKey.G.X.A0.String}};
-		vk[16] = {{.CommitmentKey.G.Y.A1.String}};
-		vk[17] = {{.CommitmentKey.G.Y.A0.String}};
-		vk[18] = {{.CommitmentKey.GRootSigmaNeg.X.A1.String}};
-		vk[19] = {{.CommitmentKey.GRootSigmaNeg.X.A0.String}};
-		vk[20] = {{.CommitmentKey.GRootSigmaNeg.Y.A1.String}};
-		vk[21] = {{.CommitmentKey.GRootSigmaNeg.Y.A0.String}};
+		vk[0] = 19845275157305329817270712870519327215928423877226694661654428772600392127152;
+		vk[1] = 5922205489357142657390257703736199065513502779240849693441482100386398267819;
+		vk[2] = 1645848163885121275220139782053746932358907108335041462279771492889258039331;
+		vk[3] = 6655739033283305608289797207305117981238198119342833785876005459365504160204;
+		vk[4] = 9276425540726747244089840267709488572797545832022628786459156828316307139110;
+		vk[5] = 15003585545947341870333319385358644806988202419252599345781997183717698525242;
+		vk[6] = 13247951322102494626900509434764500167395205191629382888796428668361334021498;
+		vk[7] = 4026958170738042276473170623611565136963263409240730945263149557395114552702;
+		vk[8] = 6512429680125388706271036610609682545361127101289075027835543443745930617012;
+		vk[9] = 5674757341978077172259191117474559762537064248795618381253762677618980013599;
+		vk[10] = 8684269618223764824471771605556307616072271922372547557364789871752166671729;
+		vk[11] = 1469314478632896630621510280152153112645074597070383750000134930577145409276;
+		vk[12] = 17901501574817329782989482824606660963215201428244130213207816543773230951501;
+		vk[13] = 14748323676376642351570777124193896608562858281323044336913850926188595395642;
+		vk[14] = 15441851398081905723229859929074729503086595290721268231181172220162000804071;
+		vk[15] = 9760778954455154901431403698364139801760641153935749707489925091887679730056;
+		vk[16] = 1461830313526063875130343207402771263144508948525039197015117912274617688425;
+		vk[17] = 9187560299696423682366016256662795080820537382916262442152078670009486255909;
+		vk[18] = 2011218808780311195760069163620178658189889778386923877620985226990410816748;
+		vk[19] = 15435969678631777703822761975116324919528649384580180428913618169166190099310;
+		vk[20] = 11389472479695792187508254453204572754657983897689351287753772727653041448230;
+		vk[21] = 3693165019018644723941696519775578442333913601280109321750917848156896443485;
     }
 
     function ic(uint16 block_size) internal pure returns (uint256[] memory gammaABC) {
-		gammaABC = new uint256[](10);
-		{{- range $i, $ki := .G1.K }}
-		{{- $j := double $i }}
-		gammaABC[{{$j}}] = {{$ki.X.String}}; // vk.K[{{$i}}].X
-		gammaABC[{{sub $j -1}}] = {{$ki.Y.String}}; // vk.K[{{$i}}].Y
-        {{- end }}
-		return gammaABC;
+
 	}
 
     // accumulate scalarMul(mul_input) into q
@@ -281,7 +268,7 @@ contract Verifier {
         uint256[2] memory a,
         uint256[2][2] memory b,
         uint256[2] memory c,
-        uint256[{{sub $lenK 1}}] calldata input
+        uint256[4] calldata input
     ) public view returns (bool r) {
 
         Proof memory proof;
@@ -323,23 +310,24 @@ contract Verifier {
         // temporary point to avoid extra allocations in accumulate
         Pairing.G1Point memory q = Pairing.G1Point(0, 0);
 
-        {{- $k0 := index .G1.K 0}}
-
-        vk_x.X = uint256({{$k0.X.String}}); // vk.K[0].X
-        vk_x.Y = uint256({{$k0.Y.String}}); // vk.K[0].Y
-
-        {{- if eq (len .G1.K) 1}}
-            // no public input, vk_x == vk.K[0]
-        {{- end}}
-        {{- range $i, $ki := .G1.K }}
-            {{- if gt $i 0 -}}
-                {{- $j := sub $i 1 }}
-        mul_input[0] = uint256({{$ki.X.String}}); // vk.K[{{$i}}].X
-        mul_input[1] = uint256({{$ki.Y.String}}); // vk.K[{{$i}}].Y
-        mul_input[2] = input[{{$j}}];
-        accumulate(mul_input, q, add_input, vk_x); // vk_x += vk.K[{{$i}}] * input[{{$j}}]
-            {{- end -}}
-        {{- end }}
+        vk_x.X = uint256(17398737229141406093750087386448053117094619507158245455991836877092665338748); // vk.K[0].X
+        vk_x.Y = uint256(19489598086828763855562128806729640022348544315375116692279680855651638449865); // vk.K[0].Y
+        mul_input[0] = uint256(10800383561645168233196988494743911810136654265054911923198926329341727678658); // vk.K[1].X
+        mul_input[1] = uint256(18227146134060743457767300880246520276274093420861732388050919455812293998989); // vk.K[1].Y
+        mul_input[2] = input[0];
+        accumulate(mul_input, q, add_input, vk_x); // vk_x += vk.K[1] * input[0]
+        mul_input[0] = uint256(10562118524020482130640648524803112772729907046796250048475749309474342289207); // vk.K[2].X
+        mul_input[1] = uint256(15239640106902636009286072350134119643106815792189139927972735538781137403660); // vk.K[2].Y
+        mul_input[2] = input[1];
+        accumulate(mul_input, q, add_input, vk_x); // vk_x += vk.K[2] * input[1]
+        mul_input[0] = uint256(10562118524020482130640648524803112772729907046796250048475749309474342289207); // vk.K[3].X
+        mul_input[1] = uint256(6648602764936639212960333395123155445589495365108683734716302355864088804923); // vk.K[3].Y
+        mul_input[2] = input[2];
+        accumulate(mul_input, q, add_input, vk_x); // vk_x += vk.K[3] * input[2]
+        mul_input[0] = uint256(4645650585440261187262147979163175014259192824703598857921824335155310329869); // vk.K[4].X
+        mul_input[1] = uint256(5062130210350555025357164978656153210678644546058473938933671473560196950206); // vk.K[4].Y
+        mul_input[2] = input[3];
+        accumulate(mul_input, q, add_input, vk_x); // vk_x += vk.K[4] * input[3]
 
         return Pairing.pairing(
             Pairing.negate(proof.A),
@@ -353,4 +341,3 @@ contract Verifier {
         );
     }
 }
-`

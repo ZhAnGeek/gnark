@@ -77,6 +77,10 @@ func Verify(proof *Proof, vk *VerifyingKey, publicWitness fr.Vector) error {
 		}
 
 		if res, err := solveCommitmentWire(&vk.CommitmentInfo, &proof.Commitment, publicCommitted); err == nil {
+			fmt.Println(publicWitness[0].String())
+			fmt.Println(publicWitness[1].String())
+			fmt.Println(publicWitness[2].String())
+
 			publicWitness = append(publicWitness, res)
 		}
 	}
@@ -125,12 +129,34 @@ func (vk *VerifyingKey) ExportSolidity(w io.Writer) error {
 		"sub": func(a, b int) int {
 			return a - b
 		},
+		"double": func(a int) int {
+			return a * 2
+		},
 	}
 
 	tmpl, err := template.New("").Funcs(helpers).Parse(solidityTemplate)
 	if err != nil {
 		return err
 	}
+
+	//gcxa1 := vk.CommitmentKey.G().X.A1
+	//gcxa0 := vk.CommitmentKey.G().X.A0
+	//gcya1 := vk.CommitmentKey.G().Y.A1
+	//gcya0 := vk.CommitmentKey.G().Y.A0
+	//gscxa1 := vk.CommitmentKey.GRootSigmaNeg().X.A1
+	//gscxa0 := vk.CommitmentKey.GRootSigmaNeg().X.A0
+	//gscya1 := vk.CommitmentKey.GRootSigmaNeg().Y.A1
+	//gscya0 := vk.CommitmentKey.GRootSigmaNeg().Y.A0
+	//
+	//fmt.Println(gcxa1.String())
+	//fmt.Println(gcxa0.String())
+	//fmt.Println(gcya1.String())
+	//fmt.Println(gcya0.String())
+	//
+	//fmt.Println(gscxa1.String())
+	//fmt.Println(gscxa0.String())
+	//fmt.Println(gscya1.String())
+	//fmt.Println(gscya0.String())
 
 	// execute template
 	return tmpl.Execute(w, vk)

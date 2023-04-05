@@ -15,11 +15,16 @@
 package mimc
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
+	bn254 "github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs/r1cs"
+	groth162 "github.com/consensys/gnark/internal/backend/bn254/groth16"
 	"github.com/consensys/gnark/test"
+	"os"
 	"testing"
 )
 
@@ -31,6 +36,8 @@ func TestPreimage(t *testing.T) {
 	var mimcCircuit = Circuit{
 		PreImage: "16130099170765464552823636852555369511329944820189892919423002775646948828469",
 		Hash:     "13773339841907060410779975660651653092173439740197484094397177791676767249280",
+		Any0:     0,
+		Any1:     1,
 	}
 	mimcCircuit.GKRs.AllocateGKRCircuit(bN)
 
@@ -40,8 +47,35 @@ func TestPreimage(t *testing.T) {
 	ccs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &circuit, frontend.IgnoreUnconstrainedInputs(), frontend.WithGKRBN(bN))
 	assert.NoError(err)
 
+	file, err := os.Create("ccs.save")
+	ccs.WriteTo(file)
+
 	pk, vk, err := groth16.Setup(ccs)
+
+	fileSol, err := os.Create("Verifier.sol")
+	defer fileSol.Close()
+	err = vk.ExportSolidity(fileSol)
+	if err != nil {
+		panic(err)
+	}
 	assert.NoError(err)
+
+	fileVk, err := os.Create("vk.save")
+	defer fileVk.Close()
+	if err != nil {
+		panic(err)
+	}
+	vk.WriteRawTo(fileVk)
+
+	filePk, err := os.Create("pk.save")
+	defer filePk.Close()
+	if err != nil {
+		panic(err)
+	}
+	pk.WriteRawTo(filePk)
+
+	filePkCom, err := os.Create("pk.commitmentKey.save")
+	pk.(*groth162.ProvingKey).WriteRawCommitmentKeyTo(filePkCom)
 
 	// groth16: Prove & Verify
 	witness, err := frontend.NewWitness(&mimcCircuit, ecc.BN254.ScalarField())
@@ -51,9 +85,27 @@ func TestPreimage(t *testing.T) {
 	assert.NoError(err)
 
 	publicWitness, err := witness.Public()
+	fileWitness, err := os.Create("witness.save")
+	defer fileWitness.Close()
+	if err != nil {
+		panic(err)
+	}
+	witness.WriteTo(fileWitness)
 	assert.NoError(err)
 
 	err = groth16.Verify(proof, vk, publicWitness)
+	bytes, _ := json.Marshal(proof)
+	fmt.Println(string(bytes))
+	proofFile, err := os.Create("proof.save")
+	proof.WriteTo(proofFile)
+
+	fmt.Print("[")
+	for i := range publicWitness.Vector().(bn254.Vector) {
+		fmt.Print(publicWitness.Vector().(bn254.Vector)[i].String())
+		fmt.Print(",")
+	}
+	fmt.Print(0)
+	fmt.Println("]")
 	assert.NoError(err)
 
 }
